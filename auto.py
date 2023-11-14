@@ -8,11 +8,18 @@ import threading
 def slider_event(value):
     print(value)
     entry3.configure(text=f"Cps Selector {round(value, 3)}")
+
+
+def slider_event2(value):
+    
+    print(value)
+    
 def leftClick():
     try:
+        minValue = entry4.get()
         maxValue = entry2.get()
         while True:
-            x = random.uniform(0.15, maxValue)
+            x = random.uniform(minValue, maxValue)
             time.sleep(x)
             print("Test")
             win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, 0, 0)
@@ -64,6 +71,8 @@ try:
     entry3 = customtkinter.CTkLabel(master=frame, text=f"Cps random time values {entry2.get()}")
     entry3.pack(pady=1, padx=1)
 
+    entry4 = customtkinter.CTkSlider(master=frame, from_=0.15, to=0.0003, command=slider_event2)
+    entry4.pack(pady=1, padx=1)
     root.mainloop()
 
 except Exception as e:

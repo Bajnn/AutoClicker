@@ -2,78 +2,55 @@ import keyboard
 import time
 import win32api
 import win32con
-import random
-import customtkinter
+import customtkinter as ctk
 import threading
-def slider_event(value):
-    print(value)
-    entry3.configure(text=f"Cps Selector {round(value, 3)}")
 
-
-def slider_event2(value):
-    
-    print(value)
-    
-def leftClick():
+def click(cps_slider, cps_label):
+    cps = round(cps_slider.get())
+    delay = 1000 / cps
     try:
-        minValue = entry4.get()
-        maxValue = entry2.get()
         while True:
-            x = random.uniform(minValue, maxValue)
-            time.sleep(x)
-            print("Test")
-            win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, 0, 0)
-            win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, 0, 0)
-            if keyboard.is_pressed("G"):
+            if win32api.GetKeyState(win32con.VK_LBUTTON) < 0:
+                win32api.mouse_event(win32con.MOUSEEVENTF_LEFTDOWN, 0, 0)
+                win32api.mouse_event(win32con.MOUSEEVENTF_LEFTUP, 0, 0)
+                time.sleep(delay / 1000)  
+                while win32api.GetKeyState(win32con.VK_LBUTTON) < 0:
+                    cps = cps_slider.get()
+                    cps_label.configure(text=f"CPS: {cps}")
+                    time.sleep(0.01)  
+            if keyboard.is_pressed("G"):  
                 break
-    except:
-        print("LeftClick")
-def start():
-    try:
-        while True:
-            time.sleep(0.1)
-            if keyboard.is_pressed("F"):
-                leftClick()    
-    except:
-        print("Start")
+    except Exception as e:
+        print("LeftClick Error:", e)
 
-def start_thread():
-    global is_running
-    if not is_running:
-        is_running = True
-        thread = threading.Thread(target=start)
-        thread.start()
+def start_clicker(cps_slider, cps_label):
+    thread = threading.Thread(target=click, args=(cps_slider, cps_label))
+    thread.start()
 
-try:
-    customtkinter.set_appearance_mode("dark")
-    customtkinter.set_default_color_theme("dark-blue")
-    root = customtkinter.CTk()
-    root.geometry("400x350")
-    root.maxsize(400,350)
-    root.minsize(400,350)
-    root.title("AutoClicker | Bajn")
-    
+def update_label(cps_slider, cps_label, event=None):
+    cps = round(cps_slider.get())
+    cps_label.configure(text=f"CPS: {cps}")
 
-    frame = customtkinter.CTkFrame(master=root)
-    frame.pack(pady=20, padx=60, fill="both", expand=True)
+def create_ui():
+    root = ctk.CTk()
+    root.title("AutoClicker")
 
-    label = customtkinter.CTkLabel(master=frame, text="AutoClicker | Start (F) | Stop (G)")
-    label.pack(pady=12, padx=10, side="top")
+    frame = ctk.CTkFrame(master=root)
+    frame.pack(pady=20, padx=60)
 
-    is_running = False  # Variable to track whether the start function is running
-    
-    entry1 = customtkinter.CTkButton(master=frame, command=start_thread, text="Start/Stop", fg_color="#035afc")
-    entry1.pack(pady=12, padx=10, side="bottom")
+    label = ctk.CTkLabel(master=frame, text="Enter CPS:")
+    label.pack()
 
-    entry2 = customtkinter.CTkSlider(master=frame, from_=0.15, to=0.0003, command=slider_event)
-    entry2.pack(pady=12, padx=10)
-    
-    entry3 = customtkinter.CTkLabel(master=frame, text=f"Cps random time values {entry2.get()}")
-    entry3.pack(pady=1, padx=1)
+    cps_slider = ctk.CTkSlider(master=frame, from_=1, to=20, command=lambda value: update_label(cps_slider, cps_label))
+    cps_slider.pack()
 
-    entry4 = customtkinter.CTkSlider(master=frame, from_=0.15, to=0.0003, command=slider_event2)
-    entry4.pack(pady=1, padx=1)
+    cps_label = ctk.CTkLabel(master=frame, text="CPS: 1")
+    cps_label.pack()
+
+    start_button = ctk.CTkButton(master=frame, text="Start", command=lambda: start_clicker(cps_slider, cps_label))
+    start_button.pack()
+
     root.mainloop()
 
-except Exception as e:
-    print(f"Error: {e}")
+if __name__ == "__main__":
+    create_ui()
